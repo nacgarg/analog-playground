@@ -59,6 +59,9 @@ void DelayModule::process(int bufferSize) {
     output->buffer->at(i++) = fifo.front();
     fifo.pop();
   }
+  while (fifo.size() > delayLength) {
+    fifo.pop();
+  }
 }
 
 void MixModule::process(int bufferSize) {
@@ -76,5 +79,51 @@ void SplitModule::process(int bufferSize) {
   outputB->buffer = graph->allocateBuffer();
   for (int i = 0; i < bufferSize; ++i) {
     outputB->buffer->at(i) = outputA->buffer->at(i);
+  }
+}
+
+void AddModule::process(int bufferSize) {
+  Module::process(bufferSize);
+  output->buffer = inputA->buffer;  // reuse buffer
+  for (int i = 0; i < bufferSize; ++i) {
+    output->buffer->at(i) += inputB->buffer->at(i);
+  }
+}
+
+void MultModule::process(int bufferSize) {
+  Module::process(bufferSize);
+  output->buffer = inputA->buffer;  // reuse buffer
+  for (int i = 0; i < bufferSize; ++i) {
+    output->buffer->at(i) *= inputB->buffer->at(i);
+  }
+}
+
+void SinOscModule::process(int bufferSize) {
+  float A = a;
+  if (amplitude->connected) {
+    A = amplitude->buffer->at(0);
+    output->buffer = amplitude->buffer;
+  }
+  float freq = f;  // hz
+  if (frequency->connected) {
+    output->buffer = frequency->buffer;
+  }
+  if (!amplitude->connected && !frequency->connected) {
+    output->buffer = graph->allocateBuffer();
+  }
+
+  for (int i = 0; i < bufferSize; ++i) {
+    // NCO implementation based on https://zipcpu.com/dsp/2017/12/09/nco.html
+    if (frequency->connected) {
+      freq = frequency->buffer->at(i);
+    }
+    float dphase = (int)(freq * ONE_ROTATION / 44100);
+
+    unsigned index;
+    phase += dphase;
+    index = phase >> ((sizeof(unsigned) * 8) - lut_qual);
+    index &= lut_len - 1;
+
+    output->buffer->at(i) = A * lut[index];
   }
 }

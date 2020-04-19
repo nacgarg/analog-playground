@@ -15,4 +15,4 @@ A Module is essentially a "node" within the audio graph. A derived Module can ha
 
 ## Issues
 
-- AudioGraph should allocate buffers for modules that have more outputs than inputs... not sure the best way to do this
+- AudioGraph should precompute the graph processing order to speed up multiple calls of `evaluate()` when the graph doesn't change

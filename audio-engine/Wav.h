@@ -10,6 +10,8 @@
 void writeToWav(const Buffer<float>& b, const std::string& path, int sampleRate) {
   std::ofstream file(path);
 
+  Log::log(LogLevel::INFO, "Writing wav file to", path, "samples:", b.getSize());
+
   int bitDepth = 16;
   int sampleSize = bitDepth / 8;
   int channels = 1;

@@ -31,7 +31,7 @@ class Module {
   std::vector<InputJack*> inputs;
   std::vector<OutputJack*> outputs;
 
-  AudioGraph* graph; // reference to graph that this belongs to
+  AudioGraph* graph;  // reference to graph that this belongs to
 
  protected:
   template <typename... A>
@@ -120,7 +120,7 @@ class DelayModule : public Module {
 };
 
 class MixModule : public Module {
-  public:
+ public:
   MixModule() : Module("MixModule") {
     output = addOutputJack("Mixed Output");
     inputA = addInputJack("Mix Input A");
@@ -134,7 +134,7 @@ class MixModule : public Module {
 };
 
 class SplitModule : public Module {
-  public:
+ public:
   SplitModule() : Module("SplitModule") {
     outputA = addOutputJack("Split Output A");
     outputB = addOutputJack("Split Output B");
@@ -145,6 +145,58 @@ class SplitModule : public Module {
   InputJack* input;
 
   void process(int bufferSize) override;
+};
+
+class AddModule : public Module {
+ public:
+  AddModule() : Module("AddModule") {
+    output = addOutputJack("Sum Output");
+    inputA = addInputJack("Add Input A");
+    inputB = addInputJack("Add Input B");
+  }
+  OutputJack* output;
+  InputJack* inputA;
+  InputJack* inputB;
+
+  void process(int bufferSize) override;
+};
+
+class MultModule : public Module {
+ public:
+  MultModule() : Module("MultModule") {
+    output = addOutputJack("Multipled Output");
+    inputA = addInputJack("Multiply Input A");
+    inputB = addInputJack("Multiply Input B");
+  }
+  OutputJack* output;
+  InputJack* inputA;
+  InputJack* inputB;
+
+  void process(int bufferSize) override;
+};
+
+class SinOscModule : public Module {
+ public:
+  SinOscModule(float _a = 1.0, float _f = 1.0) : Module("SinOscModule"), a(_a), f(_f) {
+    output = addOutputJack("Sine Wave Output");
+    amplitude = addInputJack("Amplitude");
+    frequency = addInputJack("Frequency");
+    for (int i = 0; i < lut_len; i++) lut[i] = sin(2.0 * M_PI * i / (double)lut_len);
+  }
+  OutputJack* output;
+  InputJack* amplitude;
+  InputJack* frequency;
+
+  void process(int bufferSize) override;
+
+ private:
+  float a;
+  float f;
+  static const int lut_qual = 10;
+  static const int lut_len = 1 << lut_qual;
+  float lut[lut_len];
+  unsigned phase = 0;
+  const float ONE_ROTATION = 2.0 * (1u << (sizeof(unsigned) * 8 - 1));
 };
 
 #endif
