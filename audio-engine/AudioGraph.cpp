@@ -73,15 +73,15 @@ void AudioGraph::traverse(Module* m, bool start) {
         }
       }
     }
-    if (isLeaf) {
-      Log::log(LogLevel::INFO, "Found leaf:", m->name);
-      // Initialize memory for the leaf module
-      for (OutputJack* output : m->outputs) {
-        if (output->connected) {
-          Log::log(LogLevel::INFO, "Initializing output buffer for", output->name);
-          output->buffer = new Buffer<float>(bufferSize);
-          allocatedBuffers.push_back(output->buffer);
-        }
+  }
+  if (isLeaf) {
+    Log::log(LogLevel::INFO, "Found leaf:", m->name);
+    // Initialize memory for the leaf module
+    for (OutputJack* output : m->outputs) {
+      if (output->connected || start) {
+        Log::log(LogLevel::INFO, "Initializing output buffer for", output->name);
+        output->buffer = new Buffer<float>(bufferSize);
+        allocatedBuffers.push_back(output->buffer);
       }
     }
   }

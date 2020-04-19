@@ -1,6 +1,6 @@
 #include "Module.h"
-
 #include "Log.h"
+
 int Module::num_created = 0;
 
 void Module::process(int bufferSize) {
@@ -21,5 +21,12 @@ void DummyModule::process(int bufferSize) {
     for (int i = 0; i < bufferSize; ++i) {
       output->buffer->at(i) = 3;
     }
+  }
+}
+
+void NoiseModule::process(int bufferSize) {
+  Module::process(bufferSize);
+  for (int i = 0; i < bufferSize; ++i) {
+    noise_out->buffer->at(i) = dist(rng);
   }
 }

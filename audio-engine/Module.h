@@ -2,6 +2,7 @@
 #define MODULE_H
 
 #include <memory>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -66,6 +67,21 @@ class DummyModule : public Module {
   OutputJack* output2;
 
   void process(int bufferSize) override;
+};
+
+class NoiseModule : public Module {
+ public:
+  NoiseModule(float gain) : Module("NoiseModule"), rng(rd()), dist(-gain, gain) {
+    noise_out = addOutputJack("Noise Output");
+  }
+  OutputJack* noise_out;
+
+  void process(int bufferSize) override;
+
+ private:
+  std::random_device rd;
+  std::mt19937 rng;
+  std::uniform_real_distribution<float> dist;
 };
 
 #endif
