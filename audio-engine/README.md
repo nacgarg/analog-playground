@@ -13,3 +13,6 @@ Some constraints in this project:
 
 A Module is essentially a "node" within the audio graph. A derived Module can have multiple inputs (InputJacks) and outputs (OutputJacks). The AudioGraph will call its `process()` function after making sure that any inputs are processed. InputJacks and OutputJacks have a `connected` field that can be used to modify behavior or optimize a Module's `process()`, for example, if an independent output is not used it doesn't need to be computed, and if an input isn't connected then a module can revert to default values or something like an LFO.
 
+## Issues
+
+- AudioGraph should allocate buffers for modules that have more outputs than inputs... not sure the best way to do this

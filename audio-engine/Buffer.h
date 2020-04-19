@@ -18,15 +18,17 @@ class Buffer {
 
   ~Buffer();
 
-  int getSize();
+  int getSize() const;
   void setSize(int);
   T& operator[](int index);
+  const T& operator[](int index) const;
   T& at(int index);
   T* getPointer();
 
  private:
   T* data;
   int size;
+  bool freed = false;
 };
 #include "Buffer.cpp"
 

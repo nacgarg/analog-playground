@@ -2,20 +2,27 @@
 
 #include "AudioGraph.h"
 #include "Log.h"
+#include "Wav.h"
 
 int main() {
   Log::setLevel(LogLevel::INFO);
-  AudioGraph graph;
+  AudioGraph graph(44100 * 10);
   auto noise = graph.addModule<NoiseModule>(0.5);
+  auto delayAmt = graph.addModule<ConstModule>(100);
+  auto delay = graph.addModule<DelayModule>();
+  auto mix = graph.addModule<MixModule>();
+  auto split = graph.addModule<SplitModule>();
 
-  for (auto a : graph.modules) {
-    std::cout << a->name << "\n";
-  }
+  graph.connect(delayAmt->output, delay->delayInSamples);
+  graph.connect(noise->noise_out, split->input);
+  graph.connect(split->outputA, mix->inputA);
+  graph.connect(split->outputB, delay->input);
+  graph.connect(delay->output, mix->inputB);
 
-  // graph.connect(mod0->output, mod1->input2); // for checking cycle detection
-  graph.evaluate(noise);
+  graph.evaluate(mix);
 
-  std::cout << noise->noise_out->buffer->at(1023) << "\n";
+
+  writeToWav(*mix->output->buffer, "out.wav", 44100);
 
   return 0;
 }

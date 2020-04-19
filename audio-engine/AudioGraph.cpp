@@ -80,8 +80,7 @@ void AudioGraph::traverse(Module* m, bool start) {
     for (OutputJack* output : m->outputs) {
       if (output->connected || start) {
         Log::log(LogLevel::INFO, "Initializing output buffer for", output->name);
-        output->buffer = new Buffer<float>(bufferSize);
-        allocatedBuffers.push_back(output->buffer);
+        output->buffer = allocateBuffer();
       }
     }
   }
