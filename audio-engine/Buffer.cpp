@@ -12,7 +12,6 @@ Buffer<T>::Buffer(int _size) : size(_size) {
 
 template <typename T>
 Buffer<T>::Buffer(const Buffer& rhs) : size(rhs.size) {
-  freed = false;
   data = new T[rhs.size];
   std::copy(rhs.data, rhs.data + rhs.size, data);
 }
@@ -37,14 +36,11 @@ Buffer<T>::~Buffer<T>() {
 
 template <typename T>
 void Buffer<T>::free() {
-  if (freed) return;
-  freed = true;
   delete[] data;
 }
 
 template <typename T>
 void Buffer<T>::alloc() {
-  freed = false;
   data = new T[size];
 }
 

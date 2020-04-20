@@ -44,6 +44,9 @@ void NoiseModule::process(int bufferSize) {
 }
 
 void DelayModule::process(int bufferSize) {
+  // TODO: Use circular buffer, using a queue here wastes a lot of memory and needs to
+  // allocate way too often
+
   Module::process(bufferSize);
   int delayLength = int(delayInSamples->buffer->at(0));
 

@@ -32,23 +32,47 @@ class AudioGraph {
   std::unordered_map<InputJack*, OutputJack*> connectionMapInv;
 
   Buffer<float>* allocateBuffer() {
-    // TODO: reuse orphaned buffers
+    if (emptyBuffers > 0) {
+      for (int i = 0; i < allocatedBuffers.size(); ++i) {
+        Buffer<float>* empty = allocatedBuffers[i];
+        if (!empty->inUse) {
+          empty->inUse = true;
+          emptyBuffers--;
+          return empty;
+        }
+      }
+    }
+
     Buffer<float>* b = new Buffer<float>(bufferSize);
-    allocatedBuffers.insert(b);
+    allocatedBuffers.push_back(b);
     return b;
   }
 
-  void freeBuffer(Buffer<float>* b) {
-    allocatedBuffers.erase(b);
-    delete b;
+  bool freeBuffer(Buffer<float>* b) {
+    if (!b->inUse) return false;
+    if (emptyBuffers < 8) {
+      b->inUse = false;
+      emptyBuffers++;
+      return false;
+    }
+    for (auto it = allocatedBuffers.begin(); it != allocatedBuffers.end(); ++it) {
+      if (*it == b) {
+        delete *it;
+        allocatedBuffers.erase(it);
+        return true;
+      }
+    }
+    return false;
   }
 
- private:
   int bufferSize = 2048;
+
+ private:
   void traverse(Module*, bool);
   bool changed = true;
 
-  std::unordered_set<Buffer<float>*> allocatedBuffers;
+  int emptyBuffers = 0;
+  std::vector<Buffer<float>*> allocatedBuffers;
   std::vector<Module*> processOrder;
 };
 

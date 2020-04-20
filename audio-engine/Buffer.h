@@ -25,10 +25,11 @@ class Buffer {
   T& at(int index);
   T* getPointer();
 
+  bool inUse = true;
+  
  private:
   T* data;
   int size;
-  bool freed = false;
 };
 #include "Buffer.cpp"
 

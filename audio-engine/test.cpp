@@ -44,12 +44,12 @@ int main() {
 
   Log::setLevel(LogLevel::WARN);
 
-  Buffer<float> output(256 * 5000);
+  Buffer<float> output(graph.bufferSize * 5000);
   for (int i = 0; i < 5000; ++i) {
     graph.evaluate(mix);
-    std::copy(mix->output->buffer->getPointer(), mix->output->buffer->getPointer() + 256,
-              output.getPointer() + (256 * i));
-    graph.freeBuffer(mix->output->buffer);
+    std::copy(mix->output->buffer->getPointer(),
+              mix->output->buffer->getPointer() + graph.bufferSize,
+              output.getPointer() + (graph.bufferSize * i));
   }
 
   writeToWav(output, "out.wav", 44100);
