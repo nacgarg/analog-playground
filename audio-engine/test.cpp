@@ -49,6 +49,7 @@ int main() {
     graph.evaluate(mix);
     std::copy(mix->output->buffer->getPointer(), mix->output->buffer->getPointer() + 256,
               output.getPointer() + (256 * i));
+    graph.freeBuffer(mix->output->buffer);
   }
 
   writeToWav(output, "out.wav", 44100);

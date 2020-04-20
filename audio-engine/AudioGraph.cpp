@@ -17,6 +17,9 @@ Wire& AudioGraph::connect(OutputJack* a, InputJack* b) {
   a->connected = true;
   b->connected = true;
   connectionMap[a] = b;
+  connectionMapInv[b] = a;
+
+  changed = true;
 
   return connections.back();
 }
@@ -38,7 +41,19 @@ void AudioGraph::evaluate(Module* m) {
   // (serial graphs without branches should be evaluated in place)
 
   // Right now we are essentially processing nodes in a post-order traversal
-  traverse(m, true);
+  if (changed) traverse(m, true);
+  changed = false;
+  for (Module* m : processOrder) {
+    m->process(bufferSize);
+    for (OutputJack* output : m->outputs) {
+      if (output->connected) {
+        Log::log(LogLevel::INFO, "Copying buffer from", output->module.name, "to",
+                 connectionMap[output]->module.name);
+        connectionMap[output]->buffer = output->buffer;
+      }
+    }
+  }
+  Log::log(LogLevel::INFO, "Buffers in use after evaluate:", allocatedBuffers.size());
 }
 
 void AudioGraph::traverse(Module* m, bool start) {
@@ -48,49 +63,30 @@ void AudioGraph::traverse(Module* m, bool start) {
   if (start) {
     visited.clear();
     processed.clear();
+    processOrder.clear();
+    processOrder.reserve(modules.size());
   }
 
   if (processed.find(m) != processed.end()) return;
 
-  bool isLeaf = true;
-
   Log::log(LogLevel::INFO, "Checking dependencies for", m->name);
   if (!m->inputs.empty()) {
-    for (auto w : connections) {
-      for (auto input : m->inputs) {
-        if (w.to == input) {
-          visited.insert(input);
-          auto v = &w.from->module;
-          Log::log(LogLevel::INFO, "Found dependency:", m->name, "(" + input->name + ")",
-                   "requires", w.from->name, "from", v->name);
-          if (visited.find(w.from) != visited.end()) {
-            Log::log(LogLevel::ERROR, "Detected cycle in graph");
-            throw std::invalid_argument("Cycle in audio graph");
-          }
-          visited.insert(w.from);
-          isLeaf = false;
-          traverse(v, false);
-        }
+    for (auto input : m->inputs) {
+      auto it = connectionMapInv.find(input);
+      if (it == connectionMapInv.end()) continue;
+      auto from = it->second;
+      visited.insert(input);
+      auto v = &from->module;
+      Log::log(LogLevel::INFO, "Found dependency:", m->name, "(" + input->name + ")",
+               "requires", from->name, "from", v->name);
+      if (visited.find(from) != visited.end()) {
+        Log::log(LogLevel::ERROR, "Detected cycle in graph");
+        throw std::invalid_argument("Cycle in audio graph");
       }
+      visited.insert(from);
+      traverse(v, false);
     }
   }
-  if (isLeaf) {
-    Log::log(LogLevel::INFO, "Found leaf:", m->name);
-    // Initialize memory for the leaf module
-    for (OutputJack* output : m->outputs) {
-      if (output->connected || start) {
-        Log::log(LogLevel::INFO, "Initializing output buffer for", output->name);
-        output->buffer = allocateBuffer();
-      }
-    }
-  }
-  m->process(bufferSize);
+  processOrder.push_back(m);
   processed.insert(m);
-  for (OutputJack* output : m->outputs) {
-    if (output->connected) {
-      Log::log(LogLevel::INFO, "Copying buffer from", output->module.name, "to",
-               connectionMap[output]->module.name);
-      connectionMap[output]->buffer = output->buffer;
-    }
-  }
 }

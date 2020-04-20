@@ -28,6 +28,8 @@ void DummyModule::process(int bufferSize) {
 
 void ConstModule::process(int bufferSize) {
   Module::process(bufferSize);
+  output->buffer = graph->allocateBuffer();
+
   for (int i = 0; i < bufferSize; ++i) {
     output->buffer->at(i) = value;
   }
@@ -35,6 +37,7 @@ void ConstModule::process(int bufferSize) {
 
 void NoiseModule::process(int bufferSize) {
   Module::process(bufferSize);
+  noise_out->buffer = graph->allocateBuffer();
   for (int i = 0; i < bufferSize; ++i) {
     noise_out->buffer->at(i) = dist(rng);
   }
@@ -44,8 +47,8 @@ void DelayModule::process(int bufferSize) {
   Module::process(bufferSize);
   int delayLength = int(delayInSamples->buffer->at(0));
 
-  output->buffer = input->buffer;  // reuse input buffer to store output
-  delayInSamples->buffer->free();  // don't need this buffer any more
+  output->buffer = input->buffer;             // reuse input buffer to store output
+  graph->freeBuffer(delayInSamples->buffer);  // don't need this buffer any more
 
   for (int i = 0; i < bufferSize; ++i) {
     fifo.push(input->buffer->at(i));
@@ -71,6 +74,7 @@ void MixModule::process(int bufferSize) {
     output->buffer->at(i) += inputB->buffer->at(i);
     output->buffer->at(i) /= 2.0;
   }
+  graph->freeBuffer(inputB->buffer);
 }
 
 void SplitModule::process(int bufferSize) {
@@ -88,6 +92,7 @@ void AddModule::process(int bufferSize) {
   for (int i = 0; i < bufferSize; ++i) {
     output->buffer->at(i) += inputB->buffer->at(i);
   }
+  graph->freeBuffer(inputB->buffer);
 }
 
 void MultModule::process(int bufferSize) {
@@ -96,9 +101,12 @@ void MultModule::process(int bufferSize) {
   for (int i = 0; i < bufferSize; ++i) {
     output->buffer->at(i) *= inputB->buffer->at(i);
   }
+  graph->freeBuffer(inputB->buffer);
 }
 
 void NCOModule::process(int bufferSize) {
+  Module::process(bufferSize);
+
   if (!lut_calculated) calculate_lut();
   lut_calculated = true;
   float A = a;
@@ -128,6 +136,9 @@ void NCOModule::process(int bufferSize) {
 
     output->buffer->at(i) = A * lut[index];
   }
+  if (frequency->connected && amplitude->connected) {
+    graph->freeBuffer(amplitude->buffer);
+  }
 }
 
 void SinOscModule::calculate_lut() {
@@ -136,11 +147,11 @@ void SinOscModule::calculate_lut() {
 
 void SawOscModule::calculate_lut() {
   for (int i = 0; i < lut_len; i++) {
-    lut[i] = (i/((double)lut_len))*2 - 1;
+    lut[i] = (i / ((double)lut_len)) * 2 - 1;
   }
 }
 
 void SquareOscModule::calculate_lut() {
-  for (int i = 0; i < lut_len/2; i++) lut[i] = 1;
-  for (int i = lut_len/2; i < lut_len; i++) lut[i] = -1;
+  for (int i = 0; i < lut_len / 2; i++) lut[i] = 1;
+  for (int i = lut_len / 2; i < lut_len; i++) lut[i] = -1;
 }

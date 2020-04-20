@@ -51,9 +51,9 @@ class Module {
 
 class Wire {
  public:
-  Wire(const OutputJack* a, const InputJack* b) : from(a), to(b) {}
-  const OutputJack* from;
-  const InputJack* to;
+  Wire(OutputJack* a, InputJack* b) : from(a), to(b) {}
+  OutputJack* from;
+  InputJack* to;
 };
 
 class DummyModule : public Module {
@@ -183,9 +183,9 @@ class NCOModule : public Module {
     amplitude = addInputJack("Amplitude");
     frequency = addInputJack("Frequency");
   }
-  virtual ~NCOModule() {};
+  virtual ~NCOModule(){};
   OutputJack* output;
-  InputJack* amplitude; 
+  InputJack* amplitude;
   InputJack* frequency;
 
   void process(int bufferSize) override;
@@ -221,11 +221,11 @@ class SawOscModule : public NCOModule {
 
 class SquareOscModule : public NCOModule {
  public:
-  SquareOscModule(float _a = 1.0, float _f = 440.0) : NCOModule("SquareOscModule", _a, _f) {}
+  SquareOscModule(float _a = 1.0, float _f = 440.0)
+      : NCOModule("SquareOscModule", _a, _f) {}
 
  protected:
   void calculate_lut() override;
 };
-
 
 #endif

@@ -2,6 +2,7 @@
 #define AUDIOGRAPH_H
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "Log.h"
@@ -28,19 +29,27 @@ class AudioGraph {
   std::vector<Module*> modules;
   std::vector<Wire> connections;
   std::unordered_map<OutputJack*, InputJack*> connectionMap;
+  std::unordered_map<InputJack*, OutputJack*> connectionMapInv;
 
   Buffer<float>* allocateBuffer() {
     // TODO: reuse orphaned buffers
     Buffer<float>* b = new Buffer<float>(bufferSize);
-    allocatedBuffers.push_back(b);
+    allocatedBuffers.insert(b);
     return b;
+  }
+
+  void freeBuffer(Buffer<float>* b) {
+    allocatedBuffers.erase(b);
+    delete b;
   }
 
  private:
   int bufferSize = 2048;
   void traverse(Module*, bool);
+  bool changed = true;
 
-  std::vector<Buffer<float>*> allocatedBuffers;
+  std::unordered_set<Buffer<float>*> allocatedBuffers;
+  std::vector<Module*> processOrder;
 };
 
 #endif
