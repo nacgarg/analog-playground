@@ -17,10 +17,10 @@ int main() {
   auto lfoSplit = graph.addModule<SplitModule>();
   auto sinTest = graph.addModule<SinOscModule>(0.7, 440);
   auto mult = graph.addModule<MultModule>();
-  auto anotherSin = graph.addModule<SinOscModule>(1.0, 660);
+  auto saw = graph.addModule<SawOscModule>(1.0, 660);
   auto moreSum = graph.addModule<AddModule>();
   auto baseFreq = graph.addModule<ConstModule>(400);
-  auto moreSin = graph.addModule<SinOscModule>(100, 20);
+  auto square = graph.addModule<SquareOscModule>(0.8, 1000.0);
 
   auto mix = graph.addModule<MixModule>();
 
@@ -34,12 +34,12 @@ int main() {
   graph.connect(sum->output, lfoSplit->input);
   graph.connect(lfoSplit->outputB, sinTest->frequency);
   graph.connect(sinTest->output, mult->inputA);
-  graph.connect(anotherSin->output, mult->inputB);
+  graph.connect(saw->output, mult->inputB);
   graph.connect(mult->output, mix->inputA);
   graph.connect(combMix->output, mix->inputB);
   graph.connect(baseFreq->output, moreSum->inputA);
-  graph.connect(moreSin->output, moreSum->inputB);
-  graph.connect(moreSum->output, anotherSin->frequency);
+  graph.connect(square->output, moreSum->inputB);
+  graph.connect(moreSum->output, saw->frequency);
   graph.evaluate(mix);
 
   Log::setLevel(LogLevel::WARN);

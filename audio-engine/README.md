@@ -16,3 +16,4 @@ A Module is essentially a "node" within the audio graph. A derived Module can ha
 ## Issues
 
 - AudioGraph should precompute the graph processing order to speed up multiple calls of `evaluate()` when the graph doesn't change
+- NCO Lookup tables should be static 

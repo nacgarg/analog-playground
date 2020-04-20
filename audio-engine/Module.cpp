@@ -52,7 +52,7 @@ void DelayModule::process(int bufferSize) {
   }
 
   int i = 0;
-  while (fifo.size() < delayLength + bufferSize - i) {
+  while (fifo.size() < delayLength + bufferSize - i && i < bufferSize) {
     output->buffer->at(i++) = 0;
   }
   while (i < bufferSize) {
@@ -98,7 +98,9 @@ void MultModule::process(int bufferSize) {
   }
 }
 
-void SinOscModule::process(int bufferSize) {
+void NCOModule::process(int bufferSize) {
+  if (!lut_calculated) calculate_lut();
+  lut_calculated = true;
   float A = a;
   if (amplitude->connected) {
     A = amplitude->buffer->at(0);
@@ -126,4 +128,19 @@ void SinOscModule::process(int bufferSize) {
 
     output->buffer->at(i) = A * lut[index];
   }
+}
+
+void SinOscModule::calculate_lut() {
+  for (int i = 0; i < lut_len; i++) lut[i] = sin(2.0 * M_PI * i / (double)lut_len);
+}
+
+void SawOscModule::calculate_lut() {
+  for (int i = 0; i < lut_len; i++) {
+    lut[i] = (i/((double)lut_len))*2 - 1;
+  }
+}
+
+void SquareOscModule::calculate_lut() {
+  for (int i = 0; i < lut_len/2; i++) lut[i] = 1;
+  for (int i = lut_len/2; i < lut_len; i++) lut[i] = -1;
 }

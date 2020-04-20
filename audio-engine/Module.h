@@ -175,28 +175,57 @@ class MultModule : public Module {
   void process(int bufferSize) override;
 };
 
-class SinOscModule : public Module {
+class NCOModule : public Module {
  public:
-  SinOscModule(float _a = 1.0, float _f = 1.0) : Module("SinOscModule"), a(_a), f(_f) {
-    output = addOutputJack("Sine Wave Output");
+  NCOModule(const std::string& name = "NCOModule", float _a = 1.0, float _f = 440)
+      : Module(name), a(_a), f(_f) {
+    output = addOutputJack("NCO Output");
     amplitude = addInputJack("Amplitude");
     frequency = addInputJack("Frequency");
-    for (int i = 0; i < lut_len; i++) lut[i] = sin(2.0 * M_PI * i / (double)lut_len);
   }
+  virtual ~NCOModule() {};
   OutputJack* output;
-  InputJack* amplitude;
+  InputJack* amplitude; 
   InputJack* frequency;
 
   void process(int bufferSize) override;
 
- private:
+ protected:
+  virtual void calculate_lut() = 0;
+
   float a;
   float f;
   static const int lut_qual = 10;
   static const int lut_len = 1 << lut_qual;
   float lut[lut_len];
   unsigned phase = 0;
+  bool lut_calculated = false;
   const float ONE_ROTATION = 2.0 * (1u << (sizeof(unsigned) * 8 - 1));
 };
+
+class SinOscModule : public NCOModule {
+ public:
+  SinOscModule(float _a = 1.0, float _f = 440.0) : NCOModule("SinOscModule", _a, _f) {}
+
+ protected:
+  void calculate_lut() override;
+};
+
+class SawOscModule : public NCOModule {
+ public:
+  SawOscModule(float _a = 1.0, float _f = 440.0) : NCOModule("SawOscModule", _a, _f) {}
+
+ protected:
+  void calculate_lut() override;
+};
+
+class SquareOscModule : public NCOModule {
+ public:
+  SquareOscModule(float _a = 1.0, float _f = 440.0) : NCOModule("SquareOscModule", _a, _f) {}
+
+ protected:
+  void calculate_lut() override;
+};
+
 
 #endif
