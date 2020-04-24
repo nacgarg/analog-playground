@@ -104,7 +104,7 @@ class ConstModule : public Module {
 
 class DelayModule : public Module {
  public:
-  DelayModule() : Module("DelayModule") {
+  DelayModule() : Module("DelayModule"), fifo(44100 * 2) {
     output = addOutputJack("Delayed Output");
     input = addInputJack("Delay Input");
     delayInSamples = addInputJack("Delay time in samples");
@@ -116,7 +116,7 @@ class DelayModule : public Module {
   void process(int bufferSize) override;
 
  private:
-  std::queue<float> fifo;
+  RingBuffer<float> fifo;  // max delay of 2 seconds
 };
 
 class MixModule : public Module {

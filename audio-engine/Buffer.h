@@ -26,11 +26,27 @@ class Buffer {
   T* getPointer();
 
   bool inUse = true;
-  
+
  private:
   T* data;
   int size;
 };
+
+template <typename T>
+class RingBuffer {
+  // Provides an interface to a Buffer for circular/ring buffers
+ public:
+  RingBuffer(int size);
+
+  void push(T data);
+  T get(int delay) const; // delay < buf.getSize()
+
+  int size() const;
+ private:
+  Buffer<T> buf;
+  int head = 0;
+};
+
 #include "Buffer.cpp"
 
 #endif

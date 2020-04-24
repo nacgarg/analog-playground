@@ -5,8 +5,11 @@
 #include "Wav.h"
 
 int main() {
+  int numSamples = 256 * 5000;
+  int bufferSize = 256;
+
   Log::setLevel(LogLevel::INFO);
-  AudioGraph graph(256);
+  AudioGraph graph(bufferSize);
   auto noise = graph.addModule<NoiseModule>(0.5);
   auto delayAmt = graph.addModule<ConstModule>(100);
   auto delay = graph.addModule<DelayModule>();
@@ -44,12 +47,12 @@ int main() {
 
   Log::setLevel(LogLevel::WARN);
 
-  Buffer<float> output(graph.bufferSize * 5000);
-  for (int i = 0; i < 5000; ++i) {
+  Buffer<float> output(numSamples);
+  for (int i = 0; i < (numSamples / bufferSize); ++i) {
     graph.evaluate(mix);
     std::copy(mix->output->buffer->getPointer(),
-              mix->output->buffer->getPointer() + graph.bufferSize,
-              output.getPointer() + (graph.bufferSize * i));
+              mix->output->buffer->getPointer() + bufferSize,
+              output.getPointer() + (bufferSize * i));
   }
 
   writeToWav(output, "out.wav", 44100);

@@ -75,3 +75,24 @@ template <typename T>
 T* Buffer<T>::getPointer() {
   return data;
 }
+
+template <typename T>
+RingBuffer<T>::RingBuffer(int _size) : buf(_size) {}
+
+template <typename T>
+void RingBuffer<T>::push(T data) {
+  buf[head++] = data;
+  head %= buf.getSize();
+}
+
+template <typename T>
+T RingBuffer<T>::get(int delay) const {
+  int index = ((head - delay) + buf.getSize());
+  index %= buf.getSize();
+  return buf[index];
+}
+
+template <typename T>
+int RingBuffer<T>::size() const {
+  return buf.size();
+}

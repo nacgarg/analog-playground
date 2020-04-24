@@ -44,29 +44,15 @@ void NoiseModule::process(int bufferSize) {
 }
 
 void DelayModule::process(int bufferSize) {
-  // TODO: Use circular buffer, using a queue here wastes a lot of memory and needs to
-  // allocate way too often
-
   Module::process(bufferSize);
-  int delayLength = int(delayInSamples->buffer->at(0));
 
   output->buffer = input->buffer;             // reuse input buffer to store output
   graph->freeBuffer(delayInSamples->buffer);  // don't need this buffer any more
 
   for (int i = 0; i < bufferSize; ++i) {
     fifo.push(input->buffer->at(i));
-  }
-
-  int i = 0;
-  while (fifo.size() < delayLength + bufferSize - i && i < bufferSize) {
-    output->buffer->at(i++) = 0;
-  }
-  while (i < bufferSize) {
-    output->buffer->at(i++) = fifo.front();
-    fifo.pop();
-  }
-  while (fifo.size() > delayLength) {
-    fifo.pop();
+    int delayLength = delayInSamples->buffer->at(i);
+    output->buffer->at(i) = fifo.get(delayLength);
   }
 }
 
