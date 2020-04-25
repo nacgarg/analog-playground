@@ -20,10 +20,14 @@ int main() {
   auto lfoSplit = graph.addModule<SplitModule>();
   auto sinTest = graph.addModule<SinOscModule>(0.7, 440);
   auto mult = graph.addModule<MultModule>();
-  auto saw = graph.addModule<SawOscModule>(1.0, 660);
+  auto saw = graph.addModule<SawOscModule>(1.0, 220);
   auto moreSum = graph.addModule<AddModule>();
   auto baseFreq = graph.addModule<ConstModule>(400);
   auto square = graph.addModule<SquareOscModule>(0.8, 1000.0);
+  auto filter = graph.addModule<MoogFilterModule>(1000, 0.5f);
+  auto filterLfo = graph.addModule<SinOscModule>(2800, 0.1f);
+  auto filterLfoDC = graph.addModule<ConstModule>(3000);
+  auto filterLfoSum = graph.addModule<AddModule>();
 
   auto mix = graph.addModule<MixModule>();
 
@@ -35,27 +39,30 @@ int main() {
   graph.connect(delayAmt->output, sum->inputA);
   graph.connect(lfo->output, sum->inputB);
   graph.connect(sum->output, lfoSplit->input);
-  graph.connect(lfoSplit->outputB, sinTest->frequency);
-  graph.connect(sinTest->output, mult->inputA);
-  graph.connect(saw->output, mult->inputB);
-  graph.connect(mult->output, mix->inputA);
+  graph.connect(lfoSplit->outputB, saw->frequency);
+//   graph.connect(sinTest->output, saw->frequency);
+  graph.connect(saw->output, mix->inputA);
+//   graph.connect(mult->output, mix->inputA);
   graph.connect(combMix->output, mix->inputB);
   graph.connect(baseFreq->output, moreSum->inputA);
   graph.connect(square->output, moreSum->inputB);
-  graph.connect(moreSum->output, saw->frequency);
-  graph.evaluate(mix);
+//   graph.connect(moreSum->output, saw->frequency);
+  graph.connect(mix->output, filter->input);
+  graph.connect(filterLfo->output, filterLfoSum->inputA);
+  graph.connect(filterLfoDC->output, filterLfoSum->inputB);
+  graph.connect(filterLfoSum->output, filter->frequency);
+  graph.evaluate(filter);
 
   Log::setLevel(LogLevel::WARN);
 
   Buffer<float> output(numSamples);
   for (int i = 0; i < (numSamples / bufferSize); ++i) {
-    graph.evaluate(mix);
-    std::copy(mix->output->buffer->getPointer(),
-              mix->output->buffer->getPointer() + bufferSize,
-              output.getPointer() + (bufferSize * i));
+    graph.evaluate(filter);
+    auto ptr = filter->outputLow->buffer->getPointer();
+    std::copy(ptr, ptr + bufferSize, output.getPointer() + (bufferSize * i));
   }
 
-  writeToWav(output, "out.wav", 44100);
+  writeToWav(output, "out.wav", graph.sampleRate);
 
   return 0;
 }

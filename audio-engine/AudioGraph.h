@@ -66,6 +66,7 @@ class AudioGraph {
   }
 
   int bufferSize = 2048;
+  int sampleRate = 44100;
 
  private:
   void traverse(Module*, bool);

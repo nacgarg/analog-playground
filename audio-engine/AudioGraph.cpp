@@ -41,20 +41,23 @@ void AudioGraph::evaluate(Module* m) {
   // (serial graphs without branches should be evaluated in place)
 
   // Right now we are essentially processing nodes in a post-order traversal
-
+  
+  for (auto o : m->outputs) {
+    o->connected = true;
+  }
   for (int i = 0; i < allocatedBuffers.size(); ++i) {
     if (freeBuffer(allocatedBuffers[i])) i--;
   }
   if (changed) traverse(m, true);
   changed = false;
-  for (Module* m : processOrder) {
-    m->process(bufferSize);
-    for (OutputJack* output : m->outputs) {
-      if (output->connected) {
-        auto& o = connectionMap[output];
+  for (Module* mod : processOrder) {
+    mod->process(bufferSize);
+    for (OutputJack* output : mod->outputs) {
+      if (output->connected && mod != m) {
+        auto& nextInput = connectionMap[output];
         Log::log(LogLevel::INFO, "Copying buffer from", output->module.name, "to",
-                 o->module.name);
-        o->buffer = output->buffer;
+                 nextInput->module.name);
+        nextInput->buffer = output->buffer;
       }
     }
   }

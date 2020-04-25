@@ -116,7 +116,7 @@ void NCOModule::process(int bufferSize) {
     if (frequency->connected) {
       freq = frequency->buffer->at(i);
     }
-    float dphase = (int)(freq * ONE_ROTATION / 44100);
+    float dphase = (int)(freq * ONE_ROTATION / graph->sampleRate);
 
     unsigned index;
     phase += dphase;
@@ -143,4 +143,46 @@ void SawOscModule::calculate_lut() {
 void SquareOscModule::calculate_lut() {
   for (int i = 0; i < lut_len / 2; i++) lut[i] = 1;
   for (int i = lut_len / 2; i < lut_len; i++) lut[i] = -1;
+}
+
+void MoogFilterModule::process(int bufferSize) {
+  Module::process(bufferSize);
+
+  if (outputLow->connected) outputLow->buffer = graph->allocateBuffer();
+  if (outputHigh->connected) outputHigh->buffer = graph->allocateBuffer();
+  if (outputBand->connected) outputBand->buffer = graph->allocateBuffer();
+
+  float freq = defaultFreq;
+  float res = defaultRes;
+
+  for (int i = 0; i < bufferSize; i++) {
+    if (frequency->connected) freq = frequency->buffer->at(i);
+    if (resonance->connected) res = resonance->buffer->at(i);
+    coefficients(freq, res);
+
+    float in = input->buffer->at(i);
+    x = in - (r * y[3]);
+    y[0] = x * p + oldX * p - k * y[0];
+    y[1] = y[0] * p + old[0] * p - k * y[1];
+    y[2] = y[1] * p + old[1] * p - k * y[2];
+    y[3] = y[2] * p + old[2] * p - k * y[3];
+    y[3] = y[3] - (y[3] * y[3] * y[3]) / 6;
+    oldX = x;
+    for (int i = 0; i < 4; ++i) old[i] = y[i];
+
+    if (outputLow->connected) outputLow->buffer->at(i) = y[3];
+    if (outputHigh->connected) outputHigh->buffer->at(i) = x - y[3];
+    if (outputBand->connected) outputBand->buffer->at(i) = 3.0f * (y[2] - y[3]);
+  }
+
+  if (frequency->connected) graph->freeBuffer(frequency->buffer);
+  if (resonance->connected) graph->freeBuffer(resonance->buffer);
+}
+
+void MoogFilterModule::coefficients(float frequency, float resonance) {
+  f = 2.0f * frequency / graph->sampleRate;
+  k = 3.6f * f - 1.6f * (f * f) - 1;
+  p = (k + 1) * 0.5f;
+  scale = exp((1 - p) * 1.386249);
+  r = resonance * scale;
 }

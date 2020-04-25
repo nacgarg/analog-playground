@@ -228,4 +228,36 @@ class SquareOscModule : public NCOModule {
   void calculate_lut() override;
 };
 
+class MoogFilterModule : public Module {
+  // Based on https://www.musicdsp.org/en/latest/Filters/24-moog-vcf.html
+ public:
+  MoogFilterModule(float f = 2000, float r = 0.5)
+      : Module("MoogFilterModule"), defaultFreq(f), defaultRes(r) {
+    outputLow = addOutputJack("LPF Output");
+    outputHigh = addOutputJack("HPF Output");
+    outputBand = addOutputJack("Band Output");
+    input = addInputJack("Filter Input");
+    frequency = addInputJack("Filter Frequency");
+    resonance = addInputJack("Filter Resonance");
+  }
+  OutputJack* outputLow;
+  OutputJack* outputHigh;
+  OutputJack* outputBand;
+  InputJack* input;
+  InputJack* frequency;
+  InputJack* resonance;
+
+  void process(int bufferSize) override;
+
+ private:
+  void coefficients(float frequency, float resonance);
+  float defaultFreq;
+  float defaultRes;
+
+  float f = 0, k = 0, p = 0, r = 0, x = 0, oldX =0;
+  float scale = 0;
+  float y[4] = {0};
+  float old[4] = {0};
+};
+
 #endif
