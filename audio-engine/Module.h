@@ -76,7 +76,7 @@ class DummyModule : public Module {
 
 class NoiseModule : public Module {
  public:
-  NoiseModule(float gain) : Module("NoiseModule"), rng(rd()), dist(-gain, gain) {
+  NoiseModule(float gain = 0.5) : Module("NoiseModule"), rng(rd()), dist(-gain, gain) {
     noise_out = addOutputJack("Noise Output");
   }
   OutputJack* noise_out;
@@ -91,7 +91,7 @@ class NoiseModule : public Module {
 
 class ConstModule : public Module {
  public:
-  ConstModule(float _value) : Module("ConstModule"), value(_value) {
+  ConstModule(float _value = 1) : Module("ConstModule"), value(_value) {
     output = addOutputJack("Constant Output");
   }
   OutputJack* output;

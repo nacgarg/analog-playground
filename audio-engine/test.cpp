@@ -10,7 +10,7 @@ int main() {
 
   Log::setLevel(LogLevel::INFO);
   AudioGraph graph(bufferSize);
-  auto noise = graph.addModule<NoiseModule>(0.5);
+  auto noise = graph.addModule<NoiseModule>(0);
   auto delayAmt = graph.addModule<ConstModule>(100);
   auto delay = graph.addModule<DelayModule>();
   auto combMix = graph.addModule<MixModule>();
@@ -20,13 +20,13 @@ int main() {
   auto lfoSplit = graph.addModule<SplitModule>();
   auto sinTest = graph.addModule<SinOscModule>(0.7, 440);
   auto mult = graph.addModule<MultModule>();
-  auto saw = graph.addModule<SawOscModule>(1.0, 220);
+  auto saw = graph.addModule<SawOscModule>(1.0, 55);
   auto moreSum = graph.addModule<AddModule>();
   auto baseFreq = graph.addModule<ConstModule>(400);
   auto square = graph.addModule<SquareOscModule>(0.8, 1000.0);
-  auto filter = graph.addModule<MoogFilterModule>(1000, 0.5f);
-  auto filterLfo = graph.addModule<SinOscModule>(2800, 0.1f);
-  auto filterLfoDC = graph.addModule<ConstModule>(3000);
+  auto filter = graph.addModule<MoogFilterModule>(1000, 0.2f);
+  auto filterLfo = graph.addModule<SawOscModule>(2200, 3);
+  auto filterLfoDC = graph.addModule<ConstModule>(2500);
   auto filterLfoSum = graph.addModule<AddModule>();
 
   auto mix = graph.addModule<MixModule>();
@@ -39,7 +39,7 @@ int main() {
   graph.connect(delayAmt->output, sum->inputA);
   graph.connect(lfo->output, sum->inputB);
   graph.connect(sum->output, lfoSplit->input);
-  graph.connect(lfoSplit->outputB, saw->frequency);
+//   graph.connect(lfoSplit->outputB, saw->frequency);
 //   graph.connect(sinTest->output, saw->frequency);
   graph.connect(saw->output, mix->inputA);
 //   graph.connect(mult->output, mix->inputA);

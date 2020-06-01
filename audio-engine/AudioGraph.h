@@ -71,6 +71,7 @@ class AudioGraph {
  private:
   void traverse(Module*, bool);
   bool changed = true;
+  Module* lastEval;
 
   int emptyBuffers = 0;
   std::vector<Buffer<float>*> allocatedBuffers;
